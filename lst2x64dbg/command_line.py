@@ -92,12 +92,10 @@ def lst2x64dbg():
     input_path = _open_input(args.lst)
 
     if args.module:
-        module_name = args.module
+        module_name = args.module.lower()
     else:
-        if args.dll:
-            module_name = '{}.dll'.format(input_path.stem)
-        else:
-            module_name = '{}.exe'.format(input_path.stem)
+        args.lst = args.lst.lower()
+        module_name = args.lst[:args.lst.find(".lst")]
 
     with io.open(input_path, 'r', encoding='windows-1252') as fh:
         lst_data = fh.read()
@@ -110,9 +108,9 @@ def lst2x64dbg():
 
     six_four = re.search(r'Format      : Portable executable for AMD64 \(PE\)', lst_data, flags=re.M)
 
-    public = re.findall(r'^.+:(?P<offset>(?:[0-9A-F]{8}|[0-9A-F]{16})) +public +(?P<label>\w+)$', lst_data, flags=re.M | re.A)
-    proc_near = re.findall(r'^.+:(?P<offset>(?:[0-9A-F]{8}|[0-9A-F]{16})) +(?P<label>\w+) +proc near.*$', lst_data, flags=re.M | re.A)
-    collapsed = re.findall(r'^.+:(?P<offset>(?:[0-9A-F]{8}|[0-9A-F]{16})) +; +\[\d+ BYTES: COLLAPSED FUNCTION (?P<label>[\w()]+)\. PRESS CTRL-NUMPAD\+ TO EXPAND\].*$', lst_data, flags=re.M | re.A)
+    public = re.findall(r'^.+:(?P<offset>(?:[0-9A-F]{8}|[0-9A-F]{16})) +public +(?P<label>[^ ]+).*$', lst_data, flags=re.M | re.A)
+    proc_near = re.findall(r'^.+:(?P<offset>(?:[0-9A-F]{8}|[0-9A-F]{16})) +(?P<label>[^ ]+) +proc near.*$', lst_data, flags=re.M | re.A)
+    collapsed = re.findall(r'^.+:(?P<offset>(?:[0-9A-F]{8}|[0-9A-F]{16})) +; +\[[0-9A-F]+ BYTES: COLLAPSED FUNCTION (?P<label>[^ ]+)\. PRESS CTRL-NUMPAD\+ TO EXPAND\].*$', lst_data, flags=re.M | re.A)
 
     labels_raw = set(public) | set(proc_near) | set(collapsed)
 
